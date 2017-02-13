@@ -1,6 +1,6 @@
 <?php
 ini_set('display_errors',1);
-class ModelShippingIgstiki extends Model {
+class ModelShippingIgsjntpro extends Model {
 	function getQuote($address) {
 		$classname = str_replace('vq2-catalog_model_shipping_', '', basename(__FILE__, '.php'));
 		$this->load->language('shipping/' . $classname);
@@ -46,10 +46,18 @@ class ModelShippingIgstiki extends Model {
 				);
 				return $method_data;
 			}
-			$origin_id = $this->config->get('shindo_city_id');
-			$district_id = $address['district_id'];
-			$key = $this->config->get('shindo_apikey');
-			$json = $this->getCost($origin_id, $district_id, $shipping_weight, $key);
+			$origin_id = $this->config->get('shindopro_city_id');
+			$destId = $address['district_id'];
+			if ($address['subdistrict_id']) {
+					$destId = $address['subdistrict_id'];
+					$destType = 'subdistrict';
+			}
+			$key = $this->config->get('shindopro_apikey');
+			if (isset($destType)) {
+				$json = $this->getCost($origin_id, $destId, $shipping_weight, $key, $destType);
+			} else {
+				$json = $this->getCost($origin_id, $destId, $shipping_weight, $key);
+			}
 			$quote_data = array();
 			if (isset($json['rajaongkir']) && isset($json['rajaongkir']['results']) && isset($json['rajaongkir']['results'][0]) && isset($json['rajaongkir']['results'][0]['costs'])) {
 				foreach ($json['rajaongkir']['results'][0]['costs'] as $res) {
@@ -77,7 +85,7 @@ class ModelShippingIgstiki extends Model {
 						}
 						$quote_data[$res['service']] = array(
 							'code'         => $classname . '.' . $res['service'],
-							'title'        => 'TIKI - '. $res['service'],// . $etd,
+							'title'        => 'JNT - '. $res['service'],// . $etd,
 							'cost'         => $cost,
 							'tax_class_id' => $this->config->get($classname.'_tax_class_id'),
 							'text'         => $this->currency->format($this->tax->calculate($cost, $this->config->get($classname.'_tax_class_id'), $this->config->get('config_tax')), $this->session->data['currency']),
@@ -110,17 +118,17 @@ class ModelShippingIgstiki extends Model {
 		return $method_data;
 	}
 
-	public function getCost($origin, $destination, $weight, $key) {
+	public function getCost($origin, $destination, $weight, $key, $destType='city') {
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => "http://api.rajaongkir.com/starter/cost",
+			CURLOPT_URL => "http://pro.rajaongkir.com/api/cost",
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
 		  CURLOPT_TIMEOUT => 30,
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => "POST",
-		  CURLOPT_POSTFIELDS => "origin=" . (int)$origin . "&destination=" . (int)$destination . "&weight=" . (int)$weight ."&courier=tiki",
+			CURLOPT_POSTFIELDS => "origin=" . (int)$origin . "&originType=city&destination=" . (int)$destination . "&destinationType=" . $destType . "&weight=" . (int)$weight ."&courier=jnt",
 		  CURLOPT_HTTPHEADER => array(
 				"content-type: application/x-www-form-urlencoded",
 				"key: " . $key,

@@ -1,8 +1,7 @@
 <?php
 ini_set('display_errors',1);
-class ModelShippingIgsjne extends Model {
+class ModelShippingIgswahanapro extends Model {
 	function getQuote($address) {
-		//print_r($address);
 		$classname = str_replace('vq2-catalog_model_shipping_', '', basename(__FILE__, '.php'));
 		$this->load->language('shipping/' . $classname);
 		$title = $this->language->get('text_title');
@@ -25,7 +24,6 @@ class ModelShippingIgsjne extends Model {
 			$shipping_weight = $this->cart->getWeight();
 			$from = $this->config->get('config_weight_class_id');
 			$to = $this->config->get($classname . '_weight_class_id');
-
 			$shipping_weight = str_replace(',','',$this->weight->convert($shipping_weight, $from, $to));
 			//weight not allowed 0
 			if ($shipping_weight == 0) {
@@ -48,13 +46,22 @@ class ModelShippingIgsjne extends Model {
 				);
 				return $method_data;
 			}
-			$origin_id = $this->config->get('shindo_city_id');
-			$district_id = $address['district_id'];
-			$key = $this->config->get('shindo_apikey');
-			$json = $this->getCost($origin_id, $district_id, $shipping_weight, $key);
+			$origin_id = $this->config->get('shindopro_city_id');
+			$destId = $address['district_id'];
+			if ($address['subdistrict_id']) {
+					$destId = $address['subdistrict_id'];
+					$destType = 'subdistrict';
+			}
+			$key = $this->config->get('shindopro_apikey');
+			if (isset($destType)) {
+				$json = $this->getCost($origin_id, $destId, $shipping_weight, $key, $destType);
+			} else {
+				$json = $this->getCost($origin_id, $destId, $shipping_weight, $key);
+			}
 			$quote_data = array();
 			if (isset($json['rajaongkir']) && isset($json['rajaongkir']['results']) && isset($json['rajaongkir']['results'][0]) && isset($json['rajaongkir']['results'][0]['costs'])) {
 				foreach ($json['rajaongkir']['results'][0]['costs'] as $res) {
+					# code...
 					$stat = false;
 					foreach ($this->config->get($classname. '_service') as $s) {
 						if ($s == $res['service']) {
@@ -69,7 +76,6 @@ class ModelShippingIgsjne extends Model {
 						} else {
 							$cost = $cost + $hf;
 						}
-
 						if ($this->config->get('config_currency') <>'IDR') {
 							$cost = $cost / $curr['value'];
 						}
@@ -79,7 +85,7 @@ class ModelShippingIgsjne extends Model {
 						}
 						$quote_data[$res['service']] = array(
 							'code'         => $classname . '.' . $res['service'],
-							'title'        => 'JNE - ' . $res['service'],// . $etd,
+							'title'        => 'Wahana - '. $res['service'],// . $etd,
 							'cost'         => $cost,
 							'tax_class_id' => $this->config->get($classname.'_tax_class_id'),
 							'text'         => $this->currency->format($this->tax->calculate($cost, $this->config->get($classname.'_tax_class_id'), $this->config->get('config_tax')), $this->session->data['currency']),
@@ -98,7 +104,7 @@ class ModelShippingIgsjne extends Model {
 					'error'      => false
 				);
 			} else {
-				if (isset($json['rajaongkir']['status']['description']) ) {
+				if (isset($json['rajaongkir']['status']['description']) && $json['rajaongkir']['status']['description']<>'OK' ) {
 					$method_data = array(
 						'code'       => $classname,
 						'title'      => $title,
@@ -106,27 +112,26 @@ class ModelShippingIgsjne extends Model {
 						'sort_order' => $this->config->get($classname . '_sort_order'),
 						'error'      => $json['rajaongkir']['status']['description']
 					);
-
 				}
 			}
 		}
 		return $method_data;
 	}
 
-	public function getCost($origin, $destination, $weight, $key) {
+	public function getCost($origin, $destination, $weight, $key, $destType='city') {
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => "http://api.rajaongkir.com/starter/cost",
+			CURLOPT_URL => "http://pro.rajaongkir.com/api/cost",
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => "",
 		  CURLOPT_MAXREDIRS => 10,
 		  CURLOPT_TIMEOUT => 30,
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => "POST",
-		  CURLOPT_POSTFIELDS => "origin=" . (int)$origin . "&destination=" . (int)$destination . "&weight=" . (int)$weight ."&courier=jne",
+			CURLOPT_POSTFIELDS => "origin=" . (int)$origin . "&originType=city&destination=" . (int)$destination . "&destinationType=" . $destType . "&weight=" . (int)$weight ."&courier=wahana",
 		  CURLOPT_HTTPHEADER => array(
 				"content-type: application/x-www-form-urlencoded",
-		    "key: " . $key,
+				"key: " . $key,
 		  ),
 		));
 		$response = curl_exec($curl);

@@ -1,16 +1,16 @@
 <?php
-class ControllerShippingShindo extends Controller {
+class ControllerShippingShindopro extends Controller {
 	private $error = array();
 	public function index() {
-		$this->load->language('shipping/shindo');
-		$this->load->model('shipping/shindo');
+		$this->load->language('shipping/shindopro');
+		$this->load->model('shipping/shindopro');
 
 		$this->document->setTitle($this->language->get('heading_title'));
 
 		$this->load->model('setting/setting');
-		$mod = array('igsjne','igstiki');
+		$mod = array('igsjnepro','igspospro','igstikipro', 'igswahanapro', 'igsjntpro');
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			$this->model_setting_setting->editSetting('shindo', $this->request->post);
+			$this->model_setting_setting->editSetting('shindopro', $this->request->post);
 			foreach ($mod as $m) {
 				$this->model_setting_setting->editSetting($m, $this->request->post);
 			}
@@ -43,6 +43,7 @@ class ControllerShippingShindo extends Controller {
 
 		$data['entry_province'] = $this->language->get('entry_province');
 		$data['entry_city'] = $this->language->get('entry_city');
+		$data['entry_subdistrict'] = $this->language->get('entry_subdistrict');
 		$data['entry_tax_class'] = $this->language->get('entry_tax_class');
 		$data['entry_status'] = $this->language->get('entry_status');
 		$data['entry_weight_class'] =  $this->language->get('entry_weight_class');
@@ -65,23 +66,6 @@ class ControllerShippingShindo extends Controller {
 			$data['error_warning'] = '';
 		}
 
-		if (isset($this->error['apikey'])) {
-			$data['error_apikey'] = $this->error['apikey'];
-		} else {
-			$data['error_apikey'] = '';
-		}
-		if (isset($this->error['province_id'])) {
-			$data['error_province_id'] = $this->error['province_id'];
-		} else {
-			$data['error_province_id'] = '';
-		}
-
-		if (isset($this->error['city_id'])) {
-			$data['error_city_id'] = $this->error['city_id'];
-		} else {
-			$data['error_city_id'] = '';
-		}
-
 		$data['breadcrumbs'] = array();
 
 		$data['breadcrumbs'][] = array(
@@ -91,41 +75,47 @@ class ControllerShippingShindo extends Controller {
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('text_extension'),
-			'href' => $this->url->link('extension/shipping', 'token=' . $this->session->data['token'] . '&type=shipping', true)
+			'href' => $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=shipping', true)
 		);
 
 		$data['breadcrumbs'][] = array(
 			'text' => $this->language->get('heading_title'),
-			'href' => $this->url->link('shipping/shindo', 'token=' . $this->session->data['token'], true)
+			'href' => $this->url->link('shipping/shindopro', 'token=' . $this->session->data['token'], true)
 		);
 
-		$data['action'] = $this->url->link('shipping/shindo', 'token=' . $this->session->data['token'], true);
+		$data['action'] = $this->url->link('shipping/shindopro', 'token=' . $this->session->data['token'], true);
 
 		$data['cancel'] = $this->url->link('extension/shipping', 'token=' . $this->session->data['token'] . '&type=shipping', true);
 
 
-		$data['provinces'] = $this->model_shipping_shindo->getProvinces();
-		if (isset($this->request->post['shindo_province_id'])) {
-			$data['shindo_province_id'] = $this->request->post['shindo_province_id'];
+		$data['provinces'] = $this->model_shipping_shindopro->getProvinces();
+		if (isset($this->request->post['shindopro_province_id'])) {
+			$data['shindopro_province_id'] = $this->request->post['shindopro_province_id'];
 		} else {
-			$data['shindo_province_id'] = $this->config->get('shindo_province_id');
+			$data['shindopro_province_id'] = $this->config->get('shindopro_province_id');
 		}
 
-		if (isset($this->request->post['shindo_city_id'])) {
-			$data['shindo_city_id'] = $this->request->post['shindo_city_id'];
+		if (isset($this->request->post['shindopro_city_id'])) {
+			$data['shindopro_city_id'] = $this->request->post['shindopro_city_id'];
 		} else {
-			$data['shindo_city_id'] = $this->config->get('shindo_city_id');
+			$data['shindopro_city_id'] = $this->config->get('shindopro_city_id');
 		}
 
-		if (isset($this->request->post['shindo_apikey'])) {
-			$data['shindo_apikey'] = $this->request->post['shindo_apikey'];
+		if (isset($this->request->post['shindopro_subdistrict_id'])) {
+			$data['shindopro_subdistrict_id'] = $this->request->post['shindopro_subdistrict_id'];
 		} else {
-			$data['shindo_apikey'] = $this->config->get('shindo_apikey');
+			$data['shindopro_subdistrict_id'] = $this->config->get('shindopro_subdistrict_id');
 		}
-		if (isset($this->request->post['shindo_status'])) {
-			$data['shindo_status'] = $this->request->post['shindo_status'];
+
+		if (isset($this->request->post['shindopro_apikey'])) {
+			$data['shindopro_apikey'] = $this->request->post['shindopro_apikey'];
 		} else {
-			$data['shindo_status'] = $this->config->get('shindo_status');
+			$data['shindopro_apikey'] = $this->config->get('shindopro_apikey');
+		}
+		if (isset($this->request->post['shindopro_status'])) {
+			$data['shindopro_status'] = $this->request->post['shindopro_status'];
+		} else {
+			$data['shindopro_status'] = $this->config->get('shindopro_status');
 		}
 
 		$this->load->model('localisation/geo_zone');
@@ -187,61 +177,98 @@ class ControllerShippingShindo extends Controller {
 
 
 		}
-		$data['igsjne_services'] = array();
-		$data['igstiki_services'] = array();
+		$data['igsjnepro_services'] = array();
+		$data['igspospro_services'] = array();
+		$data['igstikipro_services'] = array();
+		$data['igswahanapro_services'] = array();
+		$data['igsjntpro_services'] = array();
 
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'Ongkos Kirim Ekonomis',
 			'value' => 'OKE'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'Layanan Reguler',
 			'value' => 'REG'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'Yakin Esok Sampai',
 			'value' => 'YES'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'JNE Trucking',
 			'value' => 'JTR'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'Super Speed',
 			'value' => 'SPS'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'JNE Trucking',
 			'value' => 'JTR<150'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'JNE Trucking',
 			'value' => 'JTR>250'
 		);
-		$data['igsjne_services'][] = array(
+		$data['igsjnepro_services'][] = array(
 			'text'  => 'JNE Trucking',
 			'value' => 'JTR250'
 		);
+		//------
+		$data['igspospro_services'][] = array(
+			'text'  => 'Surat Kilat Khusus',
+			'value' => 'Surat Kilat Khusus'
+		);
+
+		$data['igspospro_services'][] = array(
+			'text'  => 'Express Next Day',
+			'value' => 'Express Next Day'
+		);
+
+		$data['igspospro_services'][] = array(
+			'text'  => 'Paketpos Biasa',
+			'value' => 'Paketpos Biasa'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Paket Kilat Khusus',
+			'value' => 'Paket Kilat Khusus'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Paket Jumbo Ekonomi',
+			'value' => 'Paket Jumbo Ekonomi'
+		);
+
 		//----
-		$data['igstiki_services'][] = array(
+		$data['igstikipro_services'][] = array(
 			'text'  => 'REGULAR SERVICE',
 			'value' => 'REG'
 		);
-		$data['igstiki_services'][] = array(
+		$data['igstikipro_services'][] = array(
 			'text'  => 'ECONOMY SERVICE',
 			'value' => 'ECO'
 		);
-		$data['igstiki_services'][] = array(
+		$data['igstikipro_services'][] = array(
 			'text'  => 'OVER NIGHT SERVICE',
 			'value' => 'ONS'
 		);
-		$data['igstiki_services'][] = array(
+		$data['igstikipro_services'][] = array(
 			'text'  => 'SAMEDAY SERVICE',
 			'value' => 'SDS'
 		);
-		$data['igstiki_services'][] = array(
+		$data['igstikipro_services'][] = array(
 			'text'  => 'HOLIDAY SERVICE',
 			'value' => 'HDS'
+		);
+		//----
+		$data['igswahanapro_services'][] = array(
+			'text'  => 'Domestic Express Service',
+			'value' => 'DES'
+		);
+		//----
+		$data['igsjntpro_services'][] = array(
+			'text'  => 'Regular Service',
+			'value' => 'EZ'
 		);
 
 
@@ -251,24 +278,16 @@ class ControllerShippingShindo extends Controller {
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 
-		$this->response->setOutput($this->load->view('shipping/shindo.tpl', $data));
+		$this->response->setOutput($this->load->view('shipping/shindopro.tpl', $data));
 	}
 
 	protected function validate() {
-		if (!$this->user->hasPermission('modify', 'shipping/shindo')) {
+		if (!$this->user->hasPermission('modify', 'shipping/shindopro')) {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
-
-		if (!$this->request->post['shindo_apikey']) {
+		if (!$this->request->post['shindopro_apikey']) {
 			$this->error['apikey'] = $this->language->get('error_apikey');
 		}
-		/*if (!$this->request->post['shindo_city_id']) {
-			$this->error['city_id'] = $this->language->get('error_city_id');
-		}
-
-		if (!$this->request->post['shindo_province_id']) {
-			$this->error['province_id'] = $this->language->get('error_province_id');
-		}*/
 
 		return !$this->error;
 	}
@@ -276,26 +295,36 @@ class ControllerShippingShindo extends Controller {
 	public function cities() {
 		$json = array();
 
-		$this->load->model('shipping/shindo');
+		$this->load->model('shipping/shindopro');
 
-		$json = $this->model_shipping_shindo->getCities($this->request->get['province_id']);
+		$json = $this->model_shipping_shindopro->getCities($this->request->get['province_id']);
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
+	}
+
+	public function subdistricts() {
+		$json = array();
+
+		$this->load->model('shipping/shindopro');
+
+		$json = $this->model_shipping_shindopro->getSubdistricts($this->request->get['city_id']);
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));
 	}
 
 	public function install() {
 		if ($this->user->hasPermission('modify', 'extension/shipping')) {
-			$this->load->model('shipping/shindo');
+			$this->load->model('shipping/shindopro');
 
-			$this->model_shipping_shindo->install();
+			$this->model_shipping_shindopro->install();
 		}
 	}
 
 	public function uninstall() {
 		if ($this->user->hasPermission('modify', 'extension/shipping')) {
-			$this->load->model('shipping/shindo');
+			$this->load->model('shipping/shindopro');
 
-			$this->model_shipping_shindo->uninstall();
+			$this->model_shipping_shindopro->uninstall();
 		}
 	}
 

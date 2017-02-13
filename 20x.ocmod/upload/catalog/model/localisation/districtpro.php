@@ -1,10 +1,10 @@
 <?php
-class ModelLocalisationDistrict extends Model {
+class ModelLocalisationDistrictpro extends Model {
 		public function getDistricts($province_id) {
-			$apikey = $this->config->get('shindo_apikey');
+			$apikey = $this->config->get('shindopro_apikey');
 			$curl = curl_init();
 			curl_setopt_array($curl, array(
-			  CURLOPT_URL => 'http://api.rajaongkir.com/starter/city?province=' . $province_id,
+			  CURLOPT_URL => 'http://pro.rajaongkir.com/api/city?province=' . $province_id,
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => "",
 			  CURLOPT_MAXREDIRS => 10,
@@ -30,10 +30,10 @@ class ModelLocalisationDistrict extends Model {
 		}
 
 		public function getDistrict($district_id) {
-				$apikey = $this->config->get('shindo_apikey');
+				$apikey = $this->config->get('shindopro_apikey');
 				$curl = curl_init();
 				curl_setopt_array($curl, array(
-				CURLOPT_URL => 'http://api.rajaongkir.com/starter/city?id=' . $district_id,
+				CURLOPT_URL => 'http://pro.rajaongkir.com/api/city?id=' . $district_id,
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => "",
 			  CURLOPT_MAXREDIRS => 10,

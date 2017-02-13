@@ -1,29 +1,55 @@
 <modification>
-  <name>Indonesian Couriers Service (Free)</name>
+  <name>Indonesian Couriers Service PRO</name>
 	<version>1.0</version>
 	<link>http://eshopstrarter.com</link>
 	<author>opencartplugin</author>
-	<code>indonesian_couriers_service_free</code>
+	<code>indonesian_couriers_service_pro</code>
   <file path="admin/controller/localisation/country.php">
 		<operation error="skip">
-			<search><![CDATA[public function index() {]]></search>
+      <search><![CDATA[public function index() {]]></search>
 			<add position="before"><![CDATA[
         //frd 1
-      	public function zone() {
+        public function zone() {
       		$json = array();
+
       		$this->load->model('localisation/zone');
+
       		$zone_info = $this->model_localisation_zone->getZone($this->request->get['zone_id']);
       		$json = array();
       		if ($zone_info) {
-      			$this->load->model('localisation/district');
+      			$this->load->model('localisation/districtpro');
       			if (!empty($zone_info['raoprop_id'])) {
       				$json = array(
       					'zone_id'     => $zone_info['country_id'],
       					'name'        => $zone_info['name'],
       					'code'        => $zone_info['code'],
       					'raoprop_id'  => $zone_info['raoprop_id'],
-      					'raoprop'     => $this->model_localisation_district->getDistricts($zone_info['raoprop_id']),
+      					'raoprop'     => $this->model_localisation_districtpro->getDistricts($zone_info['raoprop_id']),
       				);
+
+      			}
+      		}
+
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+      	public function district() {
+      		$json = array();
+      		if (trim($this->request->get['district_id']) <> '' ) {
+      			$this->load->model('localisation/districtpro');
+      			$district = $this->model_localisation_districtpro->getDistrict($this->request->get['district_id']);
+      			$json = array();
+      			if (!empty($district['rajaongkir']['results'])) {
+      				$this->load->model('localisation/subdistrictpro');
+      					$json = array(
+      						'city_id'      => $district['rajaongkir']['results']['city_id'],
+      						'province_id'  => $district['rajaongkir']['results']['province_id'],
+      						'province'     => $district['rajaongkir']['results']['province'],
+      						'type'         => $district['rajaongkir']['results']['type'],
+      						'city_name'    => $district['rajaongkir']['results']['city_name'],
+      						'postal_code'  => $district['rajaongkir']['results']['postal_code'],
+      						'subdistricts' => $this->model_localisation_subdistrictpro->getSubdistricts($district['rajaongkir']['results']['city_id']),
+      					);
 
       			}
       		}
@@ -40,6 +66,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district'); //frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -47,6 +74,7 @@
       <search><![CDATA[$data['payment_zone_id'] = $order_info['payment_zone_id'];]]></search>
       <add position="after"><![CDATA[
         $data['payment_district_id'] = $order_info['payment_district_id']; //frd 2
+        $data['payment_subdistrict_id'] = $order_info['payment_subdistrict_id']; //frd 2
       ]]>
       </add>
     </operation>
@@ -54,6 +82,7 @@
       <search><![CDATA[$data['shipping_zone_id'] = $order_info['shipping_zone_id'];]]></search>
       <add position="after"><![CDATA[
         $data['shipping_district_id'] = $order_info['shipping_district_id']; //frd 3
+        $data['shipping_subdistrict_id'] = $order_info['shipping_subdistrict_id']; //frd 3
       ]]>
       </add>
     </operation>
@@ -61,6 +90,7 @@
       <search><![CDATA[$data['payment_zone_id'] = '';]]></search>
       <add position="after"><![CDATA[
         $data['payment_district_id'] = ''; //frd 4
+        $data['payment_subdistrict_id'] = ''; //frd 4
       ]]>
       </add>
     </operation>
@@ -68,6 +98,7 @@
       <search><![CDATA[$data['shipping_zone_id'] = '';]]></search>
       <add position="after"><![CDATA[
         $data['shipping_district_id'] = ''; //frd 5
+        $data['shipping_subdistrict_id'] = ''; //frd 5
       ]]>
       </add>
     </operation>
@@ -77,6 +108,8 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'District / City'; //frd 1
+        $_['entry_subdistrict']           = 'Subdistrict'; //frd 1
+
       ]]>
       </add>
     </operation>
@@ -86,6 +119,7 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'Kabupaten / Kota'; //frd 1
+        $_['entry_subdistrict']           = 'Kecamatan'; //frd 1
       ]]>
       </add>
     </operation>
@@ -97,6 +131,8 @@
         //frd 1
         'payment_district_id'     => $order_query->row['payment_district_id'],
 				'payment_district'        => $order_query->row['payment_district'],
+        'payment_subdistrict_id'  => $order_query->row['payment_subdistrict_id'],
+				'payment_subdistrict'     => $order_query->row['payment_subdistrict'],
         //---
       ]]>
       </add>
@@ -107,6 +143,8 @@
         //frd 2
         'shipping_district_id'    => $order_query->row['shipping_district_id'],
 				'shipping_district'       => $order_query->row['shipping_district'],
+        'shipping_subdistrict_id' => $order_query->row['shipping_subdistrict_id'],
+				'shipping_subdistrict'    => $order_query->row['shipping_subdistrict'],
         //---
       ]]>
       </add>
@@ -125,15 +163,25 @@
       </add>
     </operation>
     <operation error="skip">
-      <search index="1"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
+      <search index="2"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
           <!--frd 2-->
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-payment-district"><?php echo $entry_district; ?></label>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-shipping-district"><?php echo $entry_district; ?></label>
             <div class="col-sm-10">
-              <select name="district_id" id="input-payment-district" class="form-control">
-                <?php if (!empty($payment_district_id)) {?>
-                <option value="<?php echo $payment_district_id; ?>"></option>
+              <select name="district_id" id="input-shipping-district" class="form-control">
+                <?php if (!empty($shipping_district_id)) {?>
+                <option value="<?php echo $shipping_district_id; ?>"></option>
+                <?php } ?>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-shipping-subdistrict"><?php echo $entry_subdistrict; ?></label>
+            <div class="col-sm-10">
+              <select name="subdistrict_id" id="input-shipping-subdistrict" class="form-control">
+                <?php if (!empty($shipping_subdistrict_id)) {?>
+                <option value="<?php echo $shipping_subdistrict_id; ?>"></option>
                 <?php } ?>
               </select>
             </div>
@@ -154,16 +202,32 @@
       </add>
     </operation>
     <operation error="skip">
-      <search index="2"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
+      <search index="1"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 4-->
-        <div class="form-group">
-          <label class="col-sm-2 control-label" for="input-shipping-district"><?php echo $entry_district; ?></label>
+        <div class="form-group required">
+          <label class="col-sm-2 control-label" for="input-payment-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
-            <select name="district_id" id="input-shipping-district" class="form-control">
+            <select name="district_id" id="input-payment-district" class="form-control">
+              <!--frd-->
+              <?php if (!empty($payment_district_id)) {?>
+              <option value="<?php echo $payment_district_id; ?>"></option>
+              <?php } ?>
+              <!---->
             </select>
           </div>
         </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-payment-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-payment-subdistrict" class="form-control">
+              <?php if (!empty($payment_subdistrict_id)) {?>
+              <option value="<?php echo $payment_subdistrict_id; ?>"></option>
+              <?php } ?>
+            </select>
+          </div>
+        </div>
+
         <!------>
       ]]>
       </add>
@@ -181,6 +245,7 @@
         		},
         		complete: function() {
         			$('#tab-payment .fa-spin').remove();
+              $('#tab-payment select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -211,6 +276,42 @@
         });
 
         $('#tab-payment select[name=\'zone_id\']').trigger('change');
+        /*--*/
+        $('#tab-payment select[name=\'district_id\']').on('change', function() {
+        	$.ajax({
+            url: 'index.php?route=localisation/country/district&token=<?php echo $token; ?>&district_id=' + this.value,
+        		dataType: 'json',
+        		beforeSend: function() {
+        		},
+        		complete: function() {
+        			$('#tab-payment .fa-spin').remove();
+        		},
+        		success: function(json) {
+
+              html = '<option value=""><?php echo $text_select; ?></option>';
+
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $payment_subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+        			$('#tab-payment select[name=\'subdistrict_id\']').html(html);
+        		},
+        		error: function(xhr, ajaxOptions, thrownError) {
+        			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        		}
+
+        	});
+        });
+
+
+        /*---*/
 
         //--></script>
 
@@ -224,6 +325,7 @@
         		},
         		complete: function() {
         			$('#tab-shipping .fa-spin').remove();
+              $('#tab-shipping select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -254,6 +356,40 @@
         });
 
         $('#tab-shipping select[name=\'zone_id\']').trigger('change');
+        /*--*/
+        $('#tab-shipping select[name=\'district_id\']').on('change', function() {
+        	$.ajax({
+            url: 'index.php?route=localisation/country/district&token=<?php echo $token; ?>&district_id=' + this.value,
+        		dataType: 'json',
+        		beforeSend: function() {
+        		},
+        		complete: function() {
+        			$('#tab-shipping .fa-spin').remove();
+        		},
+        		success: function(json) {
+
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $shipping_subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+        			$('#tab-shipping select[name=\'subdistrict_id\']').html(html);
+        		},
+        		error: function(xhr, ajaxOptions, thrownError) {
+        			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        		}
+
+        	});
+        });
+        /*---*/
 
         //--></script>
       ]]>
@@ -265,12 +401,19 @@
       <search><![CDATA[$this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->request->get['address_id']);]]></search>
       <add position="after"><![CDATA[
         //frd 1
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['shipping_address']['district'] = '';
+				}
+				$this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['shipping_address']['subdistrict'] = '';
 				}
 				//---
       ]]>
@@ -280,12 +423,19 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->request->get['address_id']);]]></search>
       <add position="after"><![CDATA[
         //frd 2
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['payment_address']['district'] = '';
+				}
+				$this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
 				}
 				//---
       ]]>
@@ -295,6 +445,8 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 3
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 3
+
       ]]>
       </add>
     </operation>
@@ -302,10 +454,15 @@
       <search><![CDATA[if (isset($this->error['custom_field'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 4
-    		if (isset($this->error['district'])) {
+        if (isset($this->error['district'])) {
     			$data['error_district'] = $this->error['district'];
     		} else {
     			$data['error_district'] = '';
+    		}
+    		if (isset($this->error['subdistrict'])) {
+    			$data['error_subdistrict'] = $this->error['subdistrict'];
+    		} else {
+    			$data['error_subdistrict'] = '';
     		}
     		//-----
 
@@ -316,14 +473,21 @@
       <search index="0"><![CDATA[$this->load->model('localisation/country');]]></search>
       <add position="before"><![CDATA[
         //frd 5
-    		if (isset($this->request->post['district_id'])) {
+        if (isset($this->request->post['district_id'])) {
     			$data['district_id'] = (int)$this->request->post['district_id'];
     		}  elseif (!empty($address_info)) {
     			$data['district_id'] = $address_info['district_id'];
     		} else {
     			$data['district_id'] = '';
     		}
-    		//------
+    		if (isset($this->request->post['subdistrict_id'])) {
+    			$data['subdistrict_id'] = (int)$this->request->post['subdistrict_id'];
+    		}  elseif (!empty($address_info)) {
+    			$data['subdistrict_id'] = $address_info['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
+    		}
+    	    		//------
       ]]>
       </add>
     </operation>
@@ -346,29 +510,54 @@
       <search><![CDATA[public function country() {]]></search>
       <add position="before"><![CDATA[
         //frd 1
-        public function zone() {
-          $json = array();
+        //frd
+      	public function zone() {
+      		$json = array();
 
-          $this->load->model('localisation/zone');
-          $zone_info = $this->model_localisation_zone->getZone($this->request->get['zone_id']);
-          $json = array();
-          if ($zone_info) {
-            $this->load->model('localisation/district');
-            if (!empty($zone_info['raoprop_id'])) {
-              $json = array(
-                'zone_id'        => $zone_info['country_id'],
-                'name'              => $zone_info['name'],
-                'code'        => $zone_info['code'],
-                'raoprop_id'        => $zone_info['raoprop_id'],
-                'raoprop'              => $this->model_localisation_district->getDistricts($zone_info['raoprop_id']),
-              );
+      		$this->load->model('localisation/zone');
+      		$zone_info = $this->model_localisation_zone->getZone($this->request->get['zone_id']);
+      		$json = array();
+      		if ($zone_info) {
+      			$this->load->model('localisation/districtpro');
+      			if (!empty($zone_info['raoprop_id'])) {
+      				$json = array(
+      					'zone_id'       => $zone_info['country_id'],
+      					'name'          => $zone_info['name'],
+      					'code'        	=> $zone_info['code'],
+      					'raoprop_id'    => $zone_info['raoprop_id'],
+      					'raoprop'       => $this->model_localisation_districtpro->getDistricts($zone_info['raoprop_id']),
+      				);
 
-            }
-          }
+      			}
+      		}
 
-          $this->response->addHeader('Content-Type: application/json');
-          $this->response->setOutput(json_encode($json));
-        }
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+
+      	public function district() {
+      		$json = array();
+      		if (trim($this->request->get['district_id']) <> '' ) {
+      			$this->load->model('localisation/districtpro');
+      			$district = $this->model_localisation_districtpro->getDistrict($this->request->get['district_id']);
+      			$json = array();
+      			if (!empty($district['rajaongkir']['results'])) {
+      				$this->load->model('localisation/subdistrictpro');
+      					$json = array(
+      						'city_id'      => $district['rajaongkir']['results']['city_id'],
+      						'province_id'  => $district['rajaongkir']['results']['province_id'],
+      						'province'     => $district['rajaongkir']['results']['province'],
+      						'type'         => $district['rajaongkir']['results']['type'],
+      						'city_name'    => $district['rajaongkir']['results']['city_name'],
+      						'postal_code'  => $district['rajaongkir']['results']['postal_code'],
+      						'subdistricts' => $this->model_localisation_subdistrictpro->getSubdistricts($district['rajaongkir']['results']['city_id']),
+      					);
+
+      			}
+      		}
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
         //
       ]]>
       </add>
@@ -379,6 +568,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 1
+    		$data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -386,10 +576,15 @@
       <search><![CDATA[if (isset($this->error['custom_field'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 2
-    		if (isset($this->error['district'])) {
+        if (isset($this->error['district'])) {
     			$data['error_district'] = $this->error['district'];
     		} else {
     			$data['error_district'] = '';
+    		}
+    		if (isset($this->error['subdistrict'])) {
+    			$data['error_subdistrict'] = $this->error['subdistrict'];
+    		} else {
+    			$data['error_subdistrict'] = '';
     		}
     		//-----
       ]]>
@@ -406,6 +601,15 @@
     		} else {
     			$data['district_id'] = '';
     		}
+
+    		if (isset($this->request->post['subdistrict_id'])) {
+    			$data['subdistrict_id'] = (int)$this->request->post['subdistrict_id'];
+    		} elseif (isset($this->session->data['shipping_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] = $this->session->data['shipping_address']['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
+    		}
+
     		//------
       ]]>
       </add>
@@ -431,13 +635,21 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 1
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['payment_address']['district'] = '';
         }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['payment_address']['subdistrict'] = '';
+        }
+
         //---
 
       ]]>
@@ -447,13 +659,21 @@
       <search><![CDATA[$this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 2
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['shipping_address']['district'] = '';
         }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
+        }
+
         //---
       ]]>
       </add>
@@ -478,12 +698,15 @@
       <search><![CDATA[$results = $this->model_extension_extension->getExtensions('shipping');]]></search>
       <add position="after"><![CDATA[
         //frd 1
-  			if ($this->config->get('shindo_status')==true) {
-  				$results[] = array('code'=>'igstiki');
-  				$results[] = array('code'=>'igsjne');
+        if ($this->config->get('shindopro_status')==true) {
+  				$results[] = array('code'=>'igspospro');
+  				$results[] = array('code'=>'igstikipro');
+  				$results[] = array('code'=>'igsjnepro');
+  				$results[] = array('code'=>'igswahanapro');
+  				$results[] = array('code'=>'igsjntpro');
   			}
   			foreach ($results as $key => $result) {
-  				if ($result['code']=='shindo') {
+  				if ($result['code']=='shindopro') {
   					unset ($results[$key]);
   				}
   			}
@@ -497,6 +720,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district'); //frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -504,11 +728,17 @@
       <search index="0"><![CDATA[$this->load->model('localisation/country');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-    		if (isset($this->session->data['payment_address']['district_id'])) {
+        if (isset($this->session->data['payment_address']['district_id'])) {
     			$data['district_id'] =  $this->session->data['payment_address']['district_id'];
     		} else {
     			$data['district_id'] = '';
     		}
+    		if (isset($this->session->data['payment_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] =  $this->session->data['payment_address']['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
+    		}
+
     		//------
       ]]>
       </add>
@@ -517,12 +747,19 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->request->post['address_id']);]]></search>
       <add position="after"><![CDATA[
         //frd 3
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['payment_address']['district'] = '';
+        }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['payment_address']['subdistrict'] = '';
         }
         //---
       ]]>
@@ -532,12 +769,19 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($address_id);]]></search>
       <add position="after"><![CDATA[
         //frd 4
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['payment_address']['district'] = '';
+        }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['payment_address']['subdistrict'] = '';
         }
         //---
 
@@ -564,6 +808,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -571,10 +816,15 @@
       <search index="0"><![CDATA[$this->load->model('localisation/country');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-    		if (isset($this->session->data['shipping_address']['district_id'])) {
+        if (isset($this->session->data['shipping_address']['district_id'])) {
     			$data['district_id'] =  $this->session->data['shipping_address']['district_id'];
     		} else {
     			$data['district_id'] = '';
+    		}
+    		if (isset($this->session->data['shipping_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] =  $this->session->data['shipping_address']['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
     		}
     		//------
       ]]>
@@ -584,12 +834,20 @@
       <search><![CDATA[$this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->request->post['address_id']);]]></search>
       <add position="after"><![CDATA[
         //frd 3
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['shipping_address']['district'] = '';
+        }
+
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
         }
         //---
 
@@ -600,13 +858,21 @@
       <search><![CDATA[$this->session->data['shipping_address'] = $this->model_account_address->getAddress($address_id);]]></search>
       <add position="after"><![CDATA[
         //frd 4
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['shipping_address']['district'] = '';
         }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
+        }
+
         //---
       ]]>
       </add>
@@ -624,13 +890,14 @@
       ]]>
       </add>
     </operation>
-
   </file>
   <file path="catalog/controller/checkout/guest.php">
     <operation error="skip">
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
+
       ]]>
       </add>
     </operation>
@@ -638,12 +905,19 @@
       <search index="0"><![CDATA[$this->load->model('localisation/country');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-    		if (isset($this->session->data['payment_address']['district_id'])) {
+        if (isset($this->session->data['payment_address']['district_id'])) {
     			$data['district_id'] = $this->session->data['payment_address']['district_id'];
     		} elseif (isset($this->session->data['shipping_address']['district_id'])) {
     			$data['district_id'] = $this->session->data['shipping_address']['district_id'];
     		} else {
     			$data['district_id'] = '';
+    		}
+    		if (isset($this->session->data['payment_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] = $this->session->data['payment_address']['subdistrict_id'];
+    		} elseif (isset($this->session->data['shipping_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] = $this->session->data['shipping_address']['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
     		}
     		//-------
 
@@ -654,8 +928,10 @@
       <search><![CDATA[// Customer Group]]></search>
       <add position="before"><![CDATA[
         //frd 3
-  			if (!isset($this->request->post['district_id']) || $this->request->post['district_id'] == '' || !is_numeric($this->request->post['district_id'])) {
-  				$json['error']['district'] = $this->language->get('error_district');
+        if ($this->request->post['country_id'] == 100) {
+  				if (!isset($this->request->post['district_id']) || $this->request->post['district_id'] == '' || !is_numeric($this->request->post['district_id'])) {
+  					$json['error']['district'] = $this->language->get('error_district');
+  				}
   			}
   			//------
       ]]>
@@ -666,7 +942,8 @@
       <add position="after"><![CDATA[
         //frd 4
   			$this->session->data['payment_address']['district_id'] = $this->request->post['district_id'];
-  			//----
+        $this->session->data['payment_address']['subdistrict_id'] = $this->request->post['subdistrict_id'];
+			//----
       ]]>
       </add>
     </operation>
@@ -674,13 +951,21 @@
       <search><![CDATA[if (!empty($this->request->post['shipping_address'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 5
-  			$this->load->model('localisation/district');
-  			$district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+  			$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
   			if (isset($district['rajaongkir']['results']['city_name'])){
   				$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
   			} else {
   				$this->session->data['payment_address']['district'] = '';
   			}
+        $this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
+				}
+
   			//---
 
       ]]>
@@ -691,6 +976,8 @@
       <add position="after"><![CDATA[
         //frd 6
 				$this->session->data['shipping_address']['district_id'] = $this->request->post['district_id'];
+        $this->session->data['shipping_address']['subdistrict_id'] = $this->request->post['subdistrict_id'];
+
 				//---
       ]]>
       </add>
@@ -699,13 +986,21 @@
       <search index="1"><![CDATA[if (isset($this->request->post['custom_field']['address'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 7
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['shipping_address']['district'] = '';
 				}
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
+        }
+
 				//---
       ]]>
       </add>
@@ -714,7 +1009,7 @@
       <search><![CDATA[$json['error']['zone'] = $this->language->get('error_zone');]]></search>
       <add position="after" offset="1"><![CDATA[
         //frd 8
-  			if ($this->request->post['country_id'] == 100) {
+        if ($this->request->post['country_id'] == 100) {
   				if (!isset($this->request->post['district_id']) || $this->request->post['district_id'] == '' || !is_numeric($this->request->post['district_id'])) {
   					$json['error']['district'] = $this->language->get('error_district');
   				}
@@ -729,6 +1024,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -736,10 +1032,15 @@
       <search index="0"><![CDATA[$this->load->model('localisation/country');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-    		if (isset($this->session->data['shipping_address']['district_id'])) {
+        if (isset($this->session->data['shipping_address']['district_id'])) {
     			$data['district_id'] = $this->session->data['shipping_address']['district_id'];
     		} else {
     			$data['district_id'] = '';
+    		}
+    		if (isset($this->session->data['shipping_address']['subdistrict_id'])) {
+    			$data['subdistrict_id'] = $this->session->data['shipping_address']['subdistrict_id'];
+    		} else {
+    			$data['subdistrict_id'] = '';
     		}
     		//---
 
@@ -750,7 +1051,7 @@
       <search><![CDATA[// Custom field validation]]></search>
       <add position="before"><![CDATA[
         //frd 3
-  			if (!isset($this->request->post['district_id']) || $this->request->post['district_id'] == '' || !is_numeric($this->request->post['district_id'])) {
+        if (!isset($this->request->post['district_id']) || $this->request->post['district_id'] == '' || !is_numeric($this->request->post['district_id'])) {
   				$json['error']['district'] = $this->language->get('error_district');
   			}
   			//---
@@ -761,6 +1062,7 @@
       <search><![CDATA[$this->session->data['shipping_address']['zone_id'] = $this->request->post['zone_id'];]]></search>
       <add position="after"><![CDATA[
         $this->session->data['shipping_address']['district_id'] = $this->request->post['district_id'];//frd 4
+        $this->session->data['shipping_address']['subdistrict_id'] = $this->request->post['subdistrict_id'];//frd 4
       ]]>
       </add>
     </operation>
@@ -768,13 +1070,21 @@
       <search><![CDATA[if (isset($this->request->post['custom_field'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 5
-  			$this->load->model('localisation/district');
-  			$district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+  			$district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
   			if (isset($district['rajaongkir']['results']['city_name'])){
   				$this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
   			} else {
   				$this->session->data['shipping_address']['district'] = '';
   			}
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
+        }
+
   			//---
 
       ]]>
@@ -801,6 +1111,9 @@
       <add position="after"><![CDATA[
         $order_data['payment_district'] = $this->session->data['payment_address']['district'];//frd 1
   			$order_data['payment_district_id'] = $this->session->data['payment_address']['district_id'];//frd 1
+        $order_data['payment_subdistrict'] = $this->session->data['payment_address']['subdistrict'];//frd 1
+  			$order_data['payment_subdistrict_id'] = $this->session->data['payment_address']['subdistrict_id'];//frd 1
+
       ]]>
       </add>
     </operation>
@@ -809,6 +1122,8 @@
       <add position="after"><![CDATA[
         $order_data['shipping_district'] = $this->session->data['shipping_address']['district'];//frd 2
 				$order_data['shipping_district_id'] = $this->session->data['shipping_address']['district_id'];//frd 2
+        $order_data['shipping_subdistrict'] = $this->session->data['shipping_address']['subdistrict'];//frd 2
+				$order_data['shipping_subdistrict_id'] = $this->session->data['shipping_address']['subdistrict_id'];//frd 2
       ]]>
       </add>
     </operation>
@@ -817,22 +1132,32 @@
       <add position="after"><![CDATA[
         $order_data['shipping_district'] = '';//frd 3
 				$order_data['shipping_district_id'] = '';//frd 3
+        $order_data['shipping_subdistrict'] = '';//frd 3
+				$order_data['shipping_subdistrict_id'] = '';//frd 3
       ]]>
       </add>
     </operation>
   </file>
-  <file path="catalog/controller/checkout/login.php">
+  <file path="catalog/controller/checkout/login.php--------------">
     <operation error="skip">
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 1
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
-					$this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
+					$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
-					$this->session->data['shipping_address']['district'] = '';
+					$this->session->data['payment_address']['district'] = '';
 				}
+        $this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
+				}
+
 				//---
       ]]>
       </add>
@@ -841,12 +1166,19 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 2
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['payment_address']['district'] = '';
+				}
+        $this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
 				}
 				//---
 
@@ -859,6 +1191,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district'); //frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -866,12 +1199,20 @@
       <search><![CDATA[$this->session->data['payment_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 2
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['payment_address']['district'] = '';
+				}
+
+				$this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
 				}
 				//---
       ]]>
@@ -881,12 +1222,20 @@
       <search><![CDATA[$this->session->data['shipping_address'] = $this->model_account_address->getAddress($this->customer->getAddressId());]]></search>
       <add position="after"><![CDATA[
         //frd 3
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['shipping_address']['district'] = '';
+        }
+
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
         }
         //---
       ]]>
@@ -911,6 +1260,7 @@
       <search><![CDATA[$data['entry_zone'] = $this->language->get('entry_zone');]]></search>
       <add position="after"><![CDATA[
         $data['entry_district'] = $this->language->get('entry_district');//frd 1
+        $data['entry_subdistrict'] = $this->language->get('entry_subdistrict');//frd 1
       ]]>
       </add>
     </operation>
@@ -918,11 +1268,17 @@
       <search><![CDATA[if (isset($this->session->data['shipping_address']['postcode'])) {]]></search>
       <add position="before"><![CDATA[
         //frd 2
-  			if (isset($this->session->data['shipping_address']['district_id'])) {
+        if (isset($this->session->data['shipping_address']['district_id'])) {
   				$data['district_id'] =  $this->session->data['shipping_address']['district_id'];
   			} else {
   				$data['district_id'] = '';
   			}
+  			if (isset($this->session->data['shipping_address']['subdistrict_id'])) {
+  				$data['subdistrict_id'] =  $this->session->data['shipping_address']['subdistrict_id'];
+  			} else {
+  				$data['subdistrict_id'] = '';
+  			}
+
   			//------
 
       ]]>
@@ -932,6 +1288,7 @@
       <search><![CDATA[$this->request->post['zone_id'],]]></search>
       <add position="after"><![CDATA[
         'district_id'    => $this->request->post['district_id'],//frd 3
+        'subdistrict_id' => $this->request->post['subdistrict_id'],//frd 3
       ]]>
       </add>
     </operation>
@@ -939,13 +1296,22 @@
       <search><![CDATA[$quote_data = array();]]></search>
       <add position="before"><![CDATA[
         //frd 4
-  			$this->load->model('localisation/district');
-  			$district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+  			$district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
   			if (isset($district['rajaongkir']['results']['city_name'])){
   				$this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
   			} else {
   				$this->session->data['shipping_address']['district'] = '';
   			}
+
+  			$this->load->model('localisation/subdistrictpro');
+  			$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+  			if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+  				$this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+  			} else {
+  				$this->session->data['shipping_address']['subdistrict'] = '';
+  			}
+
   			//---
 
       ]]>
@@ -955,12 +1321,15 @@
       <search><![CDATA[$results = $this->model_extension_extension->getExtensions('shipping');]]></search>
       <add position="after"><![CDATA[
         //frd 5
-  			if ($this->config->get('shindo_status')==true) {
-  				$results[] = array('code'=>'igstiki');
-  				$results[] = array('code'=>'igsjne');
+        if ($this->config->get('shindopro_status')==true) {
+  				$results[] = array('code'=>'igspospro');
+  				$results[] = array('code'=>'igstikipro');
+  				$results[] = array('code'=>'igsjnepro');
+  				$results[] = array('code'=>'igswahanapro');
+  				$results[] = array('code'=>'igsjntpro');
   			}
   			foreach ($results as $key => $result) {
-  				if ($result['code']=='shindo') {
+  				if ($result['code']=='shindopro') {
   					unset ($results[$key]);
   				}
   			}
@@ -982,6 +1351,119 @@
       ]]>
       </add>
     </operation>
+    <operation error="skip">
+      <search><![CDATA[public function country() {]]></search>
+      <add position="before"><![CDATA[
+        //frd 7
+        public function zone() {
+      		$json = array();
+
+      		$this->load->model('localisation/zone');
+      		$zone_info = $this->model_localisation_zone->getZone($this->request->get['zone_id']);
+      		$json = array();
+      		if ($zone_info) {
+      			$this->load->model('localisation/districtpro');
+      			if (!empty($zone_info['raoprop_id'])) {
+      				$json = array(
+      					'zone_id'       => $zone_info['country_id'],
+      					'name'          => $zone_info['name'],
+      					'code'        	=> $zone_info['code'],
+      					'raoprop_id'    => $zone_info['raoprop_id'],
+      					'raoprop'       => $this->model_localisation_districtpro->getDistricts($zone_info['raoprop_id']),
+      				);
+
+      			}
+      		}
+
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+
+      	public function district() {
+      		$json = array();
+      		if (trim($this->request->get['district_id']) <> '' ) {
+      			$this->load->model('localisation/districtpro');
+      			$district = $this->model_localisation_districtpro->getDistrict($this->request->get['district_id']);
+      			$json = array();
+      			if (!empty($district['rajaongkir']['results'])) {
+      				$this->load->model('localisation/subdistrictpro');
+      					$json = array(
+      						'city_id'      => $district['rajaongkir']['results']['city_id'],
+      						'province_id'  => $district['rajaongkir']['results']['province_id'],
+      						'province'     => $district['rajaongkir']['results']['province'],
+      						'type'         => $district['rajaongkir']['results']['type'],
+      						'city_name'    => $district['rajaongkir']['results']['city_name'],
+      						'postal_code'  => $district['rajaongkir']['results']['postal_code'],
+      						'subdistricts' => $this->model_localisation_subdistrictpro->getSubdistricts($district['rajaongkir']['results']['city_id']),
+      					);
+
+      			}
+      		}
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+      ]]>
+      </add>
+    </operation>
+
+
+  </file>
+  <file path="catalog/controller/checkout/checkout.php">
+    <operation error="skip">
+      <search><![CDATA[public function country() {]]></search>
+      <add position="before"><![CDATA[
+        //frd 1
+        public function zone() {
+      		$json = array();
+
+      		$this->load->model('localisation/zone');
+      		$zone_info = $this->model_localisation_zone->getZone($this->request->get['zone_id']);
+      		$json = array();
+      		if ($zone_info) {
+      			$this->load->model('localisation/districtpro');
+      			if (!empty($zone_info['raoprop_id'])) {
+      				$json = array(
+      					'zone_id'       => $zone_info['country_id'],
+      					'name'          => $zone_info['name'],
+      					'code'        	=> $zone_info['code'],
+      					'raoprop_id'    => $zone_info['raoprop_id'],
+      					'raoprop'       => $this->model_localisation_districtpro->getDistricts($zone_info['raoprop_id']),
+      				);
+
+      			}
+      		}
+
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+
+      	public function district() {
+      		$json = array();
+      		if (trim($this->request->get['district_id']) <> '' ) {
+      			$this->load->model('localisation/districtpro');
+      			$district = $this->model_localisation_districtpro->getDistrict($this->request->get['district_id']);
+      			$json = array();
+      			if (!empty($district['rajaongkir']['results'])) {
+      				$this->load->model('localisation/subdistrictpro');
+      					$json = array(
+      						'city_id'      => $district['rajaongkir']['results']['city_id'],
+      						'province_id'  => $district['rajaongkir']['results']['province_id'],
+      						'province'     => $district['rajaongkir']['results']['province'],
+      						'type'         => $district['rajaongkir']['results']['type'],
+      						'city_name'    => $district['rajaongkir']['results']['city_name'],
+      						'postal_code'  => $district['rajaongkir']['results']['postal_code'],
+      						'subdistricts' => $this->model_localisation_subdistrictpro->getSubdistricts($district['rajaongkir']['results']['city_id']),
+      					);
+
+      			}
+      		}
+      		$this->response->addHeader('Content-Type: application/json');
+      		$this->response->setOutput(json_encode($json));
+      	}
+				//---
+      ]]>
+      </add>
+    </operation>
   </file>
   <file path="catalog/controller/api/order.php">
     <operation error="skip">
@@ -989,6 +1471,8 @@
       <add position="after"><![CDATA[
         $order_data['payment_district'] = $this->session->data['payment_address']['district'];//frd 1
 				$order_data['payment_district_id'] = $this->session->data['payment_address']['district_id'];//frd 1
+        $order_data['payment_subdistrict'] = $this->session->data['payment_address']['subdistrict'];//frd 1
+				$order_data['payment_subdistrict_id'] = $this->session->data['payment_address']['subdistrict_id'];//frd 1
       ]]>
       </add>
     </operation>
@@ -997,6 +1481,8 @@
       <add position="after"><![CDATA[
         $order_data['shipping_district'] = $this->session->data['shipping_address']['district'];//frd 2
         $order_data['shipping_district_id'] = $this->session->data['shipping_address']['district_id'];//frd 2
+        $order_data['shipping_subdistrict'] = $this->session->data['shipping_address']['subdistrict'];//frd 2
+        $order_data['shipping_subdistrict_id'] = $this->session->data['shipping_address']['subdistrict_id'];//frd 2
       ]]>
       </add>
     </operation>
@@ -1005,6 +1491,8 @@
       <add position="after"><![CDATA[
         $order_data['shipping_district'] = '';//frd 3
         $order_data['shipping_district_id'] = '';//frd 3
+        $order_data['shipping_subdistrict'] = '';//frd 3
+        $order_data['shipping_subdistrict_id'] = '';//frd 3
       ]]>
       </add>
     </operation>
@@ -1014,6 +1502,7 @@
       <search><![CDATA[$zone,]]></search>
       <add position="after"><![CDATA[
         'district_id'    => $this->request->post['district_id'], //frd 1
+        'subdistrict_id' => $this->request->post['subdistrict_id'], //frd 1
       ]]>
       </add>
     </operation>
@@ -1021,13 +1510,21 @@
       <search><![CDATA[$json['success'] = $this->language->get('text_address');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-				$this->load->model('localisation/district');
-				$district = $this->model_localisation_district->getDistrict($this->session->data['payment_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+				$district = $this->model_localisation_districtpro->getDistrict($this->session->data['payment_address']['district_id']);
 				if (isset($district['rajaongkir']['results']['city_name'])){
 					$this->session->data['payment_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
 				} else {
 					$this->session->data['payment_address']['district'] = '';
 				}
+				$this->load->model('localisation/subdistrictpro');
+				$subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['payment_address']['subdistrict_id']);
+				if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+					$this->session->data['payment_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+				} else {
+					$this->session->data['payment_address']['subdistrict'] = '';
+				}
+
 				//---
       ]]>
       </add>
@@ -1052,6 +1549,7 @@
       <search><![CDATA[$zone,]]></search>
       <add position="after"><![CDATA[
         'district_id'    => $this->request->post['district_id'],//frd 1
+        'subdistrict_id' => $this->request->post['subdistrict_id'],//frd 1
       ]]>
       </add>
     </operation>
@@ -1059,12 +1557,19 @@
       <search><![CDATA[$json['success'] = $this->language->get('text_address');]]></search>
       <add position="before"><![CDATA[
         //frd 2
-        $this->load->model('localisation/district');
-        $district = $this->model_localisation_district->getDistrict($this->session->data['shipping_address']['district_id']);
+        $this->load->model('localisation/districtpro');
+        $district = $this->model_localisation_districtpro->getDistrict($this->session->data['shipping_address']['district_id']);
         if (isset($district['rajaongkir']['results']['city_name'])){
           $this->session->data['shipping_address']['district'] = $district['rajaongkir']['results']['city_name'] . ' - ' . $district['rajaongkir']['results']['type'];
         } else {
           $this->session->data['shipping_address']['district'] = '';
+        }
+        $this->load->model('localisation/subdistrictpro');
+        $subdistrict = $this->model_localisation_subdistrictpro->getSubdistrict($this->session->data['shipping_address']['subdistrict_id']);
+        if (isset($subdistrict['rajaongkir']['results']['subdistrict_name'])){
+          $this->session->data['shipping_address']['subdistrict'] = $subdistrict['rajaongkir']['results']['subdistrict_name'];
+        } else {
+          $this->session->data['shipping_address']['subdistrict'] = '';
         }
         //---
 
@@ -1075,12 +1580,13 @@
       <search><![CDATA[$results = $this->model_extension_extension->getExtensions('shipping');]]></search>
       <add position="after"><![CDATA[
         //frd 3
-        if ($this->config->get('shindo_status')==true) {
-  				$results[] = array('code'=>'igstiki');
-  				$results[] = array('code'=>'igsjne');
-        }
+        $results[] = array('code'=>'igspospro');
+				$results[] = array('code'=>'igstikipro');
+				$results[] = array('code'=>'igsjnepro');
+				$results[] = array('code'=>'igswahanapro');
+				$results[] = array('code'=>'igsjntpro');
 				foreach ($results as $key => $result) {
-					if ($result['code']=='shindo') {
+					if ($result['code']=='shindopro') {
 						unset ($results[$key]);
 					}
 				}
@@ -1105,18 +1611,19 @@
   <file path="catalog/model/account/address.php">
     <operation error="skip">
       <search position="replace" trim="true"><![CDATA[$this->db->query("INSERT INTO " . DB_PREFIX . "address SET]]></search>
-      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', ]]>
+      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', subdistrict_id ='" . (int)$this->db->escape($data['subdistrict_id']) . "', ]]>
       </add>
     </operation>
     <operation error="skip">
       <search position="replace" trim="true"><![CDATA[$this->db->query("UPDATE " . DB_PREFIX . "address SET]]></search>
-      <add><![CDATA[/*frd 2*/$this->db->query("UPDATE " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', ]]>
+      <add><![CDATA[/*frd 2*/$this->db->query("UPDATE " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', subdistrict_id ='" . (int)$this->db->escape($data['subdistrict_id']) . "', ]]>
       </add>
     </operation>
     <operation error="skip">
-      <search><![CDATA[json_decode($address_query->row['custom_field'], true)]]></search>
+      <search><![CDATA[unserialize($address_query->row['custom_field'])]]></search>
       <add position="after"><![CDATA[
         ,'district_id'     => $address_query->row['district_id'],//frd 3
+        'subdistrict_id'     => $address_query->row['subdistrict_id'],//frd 3
       ]]>
       </add>
     </operation>
@@ -1124,19 +1631,19 @@
   <file path="catalog/model/account/customer.php">
     <operation error="skip">
       <search position="replace" trim="true"><![CDATA[$this->db->query("INSERT INTO " . DB_PREFIX . "address SET]]></search>
-      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', ]]>
+      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO " . DB_PREFIX . "address SET district_id ='" . (int)$this->db->escape($data['district_id']) . "', subdistrict_id ='" . (int)$this->db->escape($data['subdistrict_id']) ."', ]]>
       </add>
     </operation>
   </file>
   <file path="catalog/model/checkout/order.php">
     <operation error="skip">
       <search position="replace" trim="true"><![CDATA[$this->db->query("INSERT INTO `" . DB_PREFIX . "order` SET]]></search>
-      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO `" . DB_PREFIX . "order` SET payment_district = '" . $this->db->escape($data['payment_district']) . "', payment_district_id = '" .  (int)$data['payment_district_id'] . "', shipping_district = '" . $this->db->escape($data['shipping_district']) . "', shipping_district_id = '" . (int)$data['shipping_district_id'] . "', ]]>
+      <add><![CDATA[/*frd 1*/$this->db->query("INSERT INTO `" . DB_PREFIX . "order` SET payment_district = '" . $this->db->escape($data['payment_district']) . "', payment_district_id = '" .  (int)$data['payment_district_id'] . "', payment_subdistrict = '" . $this->db->escape($data['payment_subdistrict']) . "', payment_subdistrict_id = '" .  (int)$data['payment_subdistrict_id'] . "', shipping_district = '" . $this->db->escape($data['shipping_district']) . "', shipping_district_id = '" . (int)$data['shipping_district_id'] . "', shipping_subdistrict = '" . $this->db->escape($data['shipping_subdistrict']) . "', shipping_subdistrict_id = '" . (int)$data['shipping_subdistrict_id'] . "', ]]>
       </add>
     </operation>
     <operation error="skip">
       <search position="replace" trim="true"><![CDATA[$this->db->query("UPDATE `" . DB_PREFIX . "order` SET invoice_prefix = '" . $this->db->escape($data['invoice_prefix']) . "',]]></search>
-      <add><![CDATA[/*frd 2*/$this->db->query("UPDATE `" . DB_PREFIX . "order` SET invoice_prefix = '" . $this->db->escape($data['invoice_prefix']) . "', payment_district = '" . $this->db->escape($data['payment_district']) . "', payment_district_id = '" . (int)$data['payment_district_id'] . "', shipping_district = '" . $this->db->escape($data['shipping_district']) . "', shipping_district_id = '" . (int)$data['shipping_district_id'] . "', ]]>
+      <add><![CDATA[/*frd 2*/$this->db->query("UPDATE `" . DB_PREFIX . "order` SET invoice_prefix = '" . $this->db->escape($data['invoice_prefix']) . "', payment_district = '" . $this->db->escape($data['payment_district']) . "', payment_district_id = '" . (int)$data['payment_district_id'] . "', payment_subdistrict = '" . $this->db->escape($data['payment_subdistrict']) . "', payment_subdistrict_id = '" . (int)$data['payment_subdistrict_id'] . "', shipping_district = '" . $this->db->escape($data['shipping_district']) . "', shipping_district_id = '" . (int)$data['shipping_district_id'] . "', shipping_subdistrict = '" . $this->db->escape($data['shipping_subdistrict']) . "', shipping_subdistrict_id = '" . (int)$data['shipping_subdistrict_id'] . "', ]]>
       </add>
     </operation>
     <operation error="skip">
@@ -1144,6 +1651,8 @@
       <add position="after"><![CDATA[
         'payment_district_id'     => $order_query->row['payment_district_id'], //frd 3
 				'payment_district'        => $order_query->row['payment_district'], //frd 3
+        'payment_subdistrict_id'     => $order_query->row['payment_subdistrict_id'], //frd 3
+				'payment_subdistrict'        => $order_query->row['payment_subdistrict'], //frd 3
       ]]>
       </add>
     </operation>
@@ -1152,6 +1661,8 @@
       <add position="after"><![CDATA[
         'shipping_district_id'    => $order_query->row['shipping_district_id'],//frd 4
 				'shipping_district'       => $order_query->row['shipping_district'], //frd 4
+        'shipping_subdistrict_id'    => $order_query->row['shipping_subdistrict_id'],//frd 4
+				'shipping_subdistrict'       => $order_query->row['shipping_subdistrict'], //frd 4
       ]]>
       </add>
     </operation>
@@ -1161,6 +1672,8 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'District / City'; //frd 1
+        $_['entry_subdistrict']    = 'Sub District'; //frd 1
+
       ]]>
       </add>
     </operation>
@@ -1170,6 +1683,8 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'Kabupaten / Kota'; //frd 1
+        $_['entry_subdistrict']    = 'Kecamatan'; //frd 1
+
       ]]>
       </add>
     </operation>
@@ -1179,6 +1694,7 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'District / City'; //frd 1
+        $_['entry_subdistrict']    = 'Sub District'; //frd 1
         $_['error_district']               = 'Warning: District required';//frd 1
       ]]>
       </add>
@@ -1189,6 +1705,7 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'Kabupaten / Kota'; //frd 1
+        $_['entry_subdistrict']    = 'Kecamatan'; //frd 1
         $_['error_district']           = 'Warning: Kabupaten harus diisi';//frd 1
     ]]>
       </add>
@@ -1199,6 +1716,7 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'District / City'; //frd 1
+        $_['entry_subdistrict']    = 'Sub District'; //frd 1
         $_['error_district']               = 'Warning: District required';//frd 1
     ]]>
       </add>
@@ -1209,6 +1727,7 @@
       <search><![CDATA[$_['entry_zone']]]></search>
       <add position="after"><![CDATA[
         $_['entry_district']           = 'Kabupaten / Kota'; //frd 1
+        $_['entry_subdistrict']    = 'Kecamatan'; //frd 1
         $_['error_district']           = 'Warning: Kabupaten harus diisi';//frd 1
       ]]>
       </add>
@@ -1266,16 +1785,33 @@
       <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-district" class="form-control">
+              <?php if (!empty($district_id)) {?>
+              <option value="<?php echo $district_id; ?>"></option>
+              <?php } ?>
             </select>
             <?php if ($error_district) { ?>
             <div class="text-danger"><?php echo $error_district; ?></div>
             <?php } ?>
           </div>
         </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-subdistrict" class="form-control">
+              <?php if (!empty($subdistrict_id)) {?>
+              <option value="<?php echo $subdistrict_id; ?>"></option>
+              <?php } ?>
+            </select>
+            <?php if ($error_subdistrict) { ?>
+            <div class="text-danger"><?php echo $error_subdistrict; ?></div>
+            <?php } ?>
+          </div>
+        </div>
+
         <!------>
 
       ]]>
@@ -1295,6 +1831,7 @@
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1316,16 +1853,48 @@
         			}
 
         			$('select[name=\'district_id\']').html(html);
+              $('select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
         		}
         	});
         });
-
         $('select[name=\'zone_id\']').trigger('change');
-        //--></script>
+        /*---*/
+        $('select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=account/account/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
 
+              $('select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
+        /*---*/
+        //--></script>
       ]]>
       </add>
     </operation>
@@ -1346,13 +1915,26 @@
       <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-district" class="form-control">
+              <?php if (!empty($district_id)) {?>
+              <option value="<?php echo $district_id; ?>"></option>
+              <?php } ?>
             </select>
             <?php if ($error_district) { ?>
             <div class="text-danger"><?php echo $error_district; ?></div>
+            <?php } ?>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-subdistrict" class="form-control">
+            </select>
+            <?php if ($error_subdistrict) { ?>
+            <div class="text-danger"><?php echo $error_subdistrict; ?></div>
             <?php } ?>
           </div>
         </div>
@@ -1374,6 +1956,7 @@
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1395,6 +1978,8 @@
         			}
 
         			$('select[name=\'district_id\']').html(html);
+              $('select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1403,6 +1988,41 @@
         });
 
         $('select[name=\'zone_id\']').trigger('change');
+
+        /*---*/
+        $('select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=account/account/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+              $('select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
+        /*---*/
+
         //--></script>
       ]]>
       </add>
@@ -1424,7 +2044,7 @@
       <search><![CDATA[<label class="col-sm-2 control-label" for="input-postcode"><?php echo $entry_postcode; ?></label>]]></search>
       <add position="before" offset="1"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-district" class="form-control">
@@ -1437,6 +2057,20 @@
             <?php } ?>-->
           </div>
         </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-subdistrict" class="form-control">
+              <?php if (!empty($subdistrict_id)) {?>
+              <option value="<?php echo $subdistrict_id; ?>"></option>
+              <?php } ?>
+            </select>
+            <!--<?php if ($error_district) { ?>
+            <div class="text-danger"><?php echo $error_district; ?></div>
+            <?php } ?>-->
+          </div>
+        </div>
+
         <!---->
       ]]>
       </add>
@@ -1445,7 +2079,7 @@
       <search><![CDATA[data: 'country_id=' + $('select[name=\'country_id\']').val() + '&zone_id=' + $('select[name=\'zone_id\']').val() + '&postcode=' + encodeURIComponent($('input[name=\'postcode\']').val()),]]></search>
       <add position="replace"><![CDATA[
         /*frd 3*/
-        data: 'country_id=' + $('select[name=\'country_id\']').val() + '&zone_id=' + $('select[name=\'zone_id\']').val() + '&postcode=' + encodeURIComponent($('input[name=\'postcode\']').val()) + '&district_id=' + $('select[name=\'district_id\']').val(),
+        data: 'country_id=' + $('select[name=\'country_id\']').val() + '&zone_id=' + $('select[name=\'zone_id\']').val() + '&postcode=' + encodeURIComponent($('input[name=\'postcode\']').val()) + '&district_id=' + $('select[name=\'district_id\']').val() + '&subdistrict_id=' + $('select[name=\'subdistrict_id\']').val(),
       ]]>
       </add>
     </operation>
@@ -1469,13 +2103,14 @@
         <script type="text/javascript"><!--
         $('select[name=\'zone_id\']').on('change', function() {
         	$.ajax({
-        		url: 'index.php?route=account/account/zone&zone_id=' + this.value,
+        		url: 'index.php?route=checkout/shipping/zone&zone_id=' + this.value,
         		dataType: 'json',
         		beforeSend: function() {
         			$('select[name=\'zone_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1495,8 +2130,8 @@
         			} else {
         				/*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
         			}
-
-        			$('select[name=\'district_id\']').html(html);
+              $('select[name=\'district_id\']').html(html);
+              $('select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1504,6 +2139,38 @@
         	});
         });
         $('select[name=\'zone_id\']').trigger('change');
+        /*---*/
+        $('select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=checkout/shipping/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+              $('select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
         //--></script>
 
       ]]>
@@ -1538,7 +2205,7 @@
       <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-payment-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-payment-district" class="form-control">
@@ -1552,8 +2219,14 @@
             <?php } ?>-->
           </div>
         </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-payment-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-payment-subdistrict" class="form-control">
+            </select>
+          </div>
+        </div>
       ]]>
-      <!---->
       </add>
     </operation>
     <operation error="skip">
@@ -1570,6 +2243,7 @@
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('#collapse-payment-address select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1591,6 +2265,8 @@
         			}
 
         			$('#collapse-payment-address select[name=\'district_id\']').html(html);
+              $('#collapse-payment-address select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1598,11 +2274,44 @@
         	});
         });
         $('#collapse-payment-address select[name=\'zone_id\']').trigger('change');
+        /*---*/
+        $('#collapse-payment-address select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=account/account/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('#collapse-payment-address select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+              $('#collapse-payment-address select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
+        /*---*/
+
         //--></script>
       ]]>
       </add>
     </operation>
-
   </file>
   <file path="catalog/view/theme/*/template/checkout/shipping_address.tpl">
     <operation error="skip">
@@ -1620,7 +2329,7 @@
       <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-shipping-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-shipping-district" class="form-control">
@@ -1631,6 +2340,13 @@
             <!--<?php if ($error_district) { ?>
             <div class="text-danger"><?php echo $error_district; ?></div>
             <?php } ?>-->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-shipping-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-shipping-subdistrict" class="form-control">
+            </select>
           </div>
         </div>
         <!---->
@@ -1644,13 +2360,14 @@
         <script type="text/javascript"><!--
         $('#collapse-shipping-address select[name=\'zone_id\']').on('change', function() {
         	$.ajax({
-        		url: 'index.php?route=account/account/zone&zone_id=' + this.value,
+        		url: 'index.php?route=checkout/checkout/zone&zone_id=' + this.value,
         		dataType: 'json',
         		beforeSend: function() {
         			$('#collapse-shipping-address select[name=\'zone_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('#collapse-shipping-address select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1672,6 +2389,8 @@
         			}
 
         			$('#collapse-shipping-address select[name=\'district_id\']').html(html);
+              $('#collapse-shipping-address select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1679,8 +2398,41 @@
         	});
         });
         $('#collapse-shipping-address select[name=\'zone_id\']').trigger('change');
-        //--></script>
+        /*---*/
+        $('#collapse-shipping-address select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=checkout/checkout/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('#collapse-shipping-address select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
 
+              $('#collapse-shipping-address select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
+        /*---*/
+
+        //--></script>
       ]]>
       </add>
     </operation>
@@ -1701,10 +2453,25 @@
       <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="col-sm-2 control-label" for="input-shipping-district"><?php echo $entry_district; ?></label>
           <div class="col-sm-10">
             <select name="district_id" id="input-shipping-district" class="form-control">
+              <!---frd-->
+              <?php if (!empty($district_id)) {?>
+              <option value="<?php echo $district_id; ?>"></option>
+              <?php } ?>
+              <!---frd-->
+            </select>
+            <!--<?php if ($error_district) { ?>
+            <div class="text-danger"><?php echo $error_district; ?></div>
+            <?php } ?>-->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-shipping-subdistrict"><?php echo $entry_subdistrict; ?></label>
+          <div class="col-sm-10">
+            <select name="subdistrict_id" id="input-shipping-subdistrict" class="form-control">
             </select>
             <!--<?php if ($error_district) { ?>
             <div class="text-danger"><?php echo $error_district; ?></div>
@@ -1729,6 +2496,7 @@
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('#collapse-shipping-address select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1748,8 +2516,40 @@
         			} else {
         				/*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
         			}
+              $('#collapse-shipping-address select[name=\'district_id\']').html(html);
+              $('#collapse-shipping-address select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+        		},
+        		error: function(xhr, ajaxOptions, thrownError) {
+        			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        		}
+        	});
+        });
+        $('#collapse-shipping-address select[name=\'zone_id\']').trigger('change');
+        $('#collapse-shipping-address select[name=\'district_id\']').on('change', function() {
+        	$.ajax({
+        		url: 'index.php?route=account/account/district&district_id=' + this.value,
+        		dataType: 'json',
+        		beforeSend: function() {
+        			$('#collapse-shipping-address select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+        		},
+        		complete: function() {
+        			$('.fa-spin').remove();
+        		},
+        		success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
 
-        			$('#collapse-shipping-address select[name=\'district_id\']').html(html);
+        			$('#collapse-shipping-address select[name=\'subdistrict_id\']').html(html);
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1757,12 +2557,12 @@
         	});
         });
 
-        $('#collapse-shipping-address select[name=\'zone_id\']').trigger('change');
+
+
         //--></script>
       ]]>
       </add>
     </operation>
-
   </file>
   <file path="catalog/view/theme/*/template/checkout/guest.tpl">
     <operation error="skip">
@@ -1781,9 +2581,22 @@
       <search index="1"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
-          <label class="control-label" for="input-payment-district"><?php echo $entry_district; ?></label>
+        <div class="form-group required">
+          <label class="control-label" for="input-payment-zone"><?php echo $entry_district; ?></label>
           <select name="district_id" id="input-payment-district" class="form-control">
+            <!---frd-->
+            <?php if (!empty($district_id)) {?>
+            <option value="<?php echo $district_id; ?>"></option>
+            <?php } ?>
+            <!---frd-->
+          </select>
+          <!--<?php if ($error_district) { ?>
+          <div class="text-danger"><?php echo $error_district; ?></div>
+            <?php } ?>-->
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="input-payment-zone"><?php echo $entry_subdistrict; ?></label>
+          <select name="subdistrict_id" id="input-payment-subdistrict" class="form-control">
           </select>
           <!--<?php if ($error_district) { ?>
           <div class="text-danger"><?php echo $error_district; ?></div>
@@ -1807,6 +2620,7 @@
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('#collapse-payment-address select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1828,6 +2642,8 @@
         			}
 
         			$('#collapse-payment-address select[name=\'district_id\']').html(html);
+              $('#collapse-payment-address select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1836,11 +2652,46 @@
         });
 
         $('#collapse-payment-address select[name=\'zone_id\']').trigger('change');
+
+        $('#collapse-payment-address select[name=\'district_id\']').on('change', function() {
+        	$.ajax({
+        		url: 'index.php?route=account/account/district&district_id=' + this.value,
+        		dataType: 'json',
+        		beforeSend: function() {
+        			$('#collapse-payment-address select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+        		},
+        		complete: function() {
+        			$('.fa-spin').remove();
+        		},
+        		success: function(json) {
+
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+        			$('#collapse-payment-address select[name=\'subdistrict_id\']').html(html);
+        		},
+        		error: function(xhr, ajaxOptions, thrownError) {
+        			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        		}
+        	});
+        });
+
+
+
         //--></script>
         ]]>
       </add>
     </operation>
-
   </file>
   <file path="catalog/view/theme/*/template/checkout/shipping_method.tpl">
     <operation error="skip">
@@ -1869,10 +2720,22 @@
       <search index="1"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
-        <div class="form-group">
+        <div class="form-group required">
           <label class="control-label" for="input-payment-district"><?php echo $entry_district; ?></label>
-          <select name="district_id" id="input-payment-district" class="form-control">
-          </select>
+            <select name="district_id" id="input-payment-district" class="form-control">
+              <?php if (!empty($district_id)) {?>
+              <option value="<?php echo $district_id; ?>"></option>
+              <?php } ?>
+
+            </select>
+            <!--<?php if ($error_district) { ?>
+            <div class="text-danger"><?php echo $error_district; ?></div>
+            <?php } ?>-->
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="input-payment-subdistrict"><?php echo $entry_subdistrict; ?></label>
+            <select name="subdistrict_id" id="input-payment-subdistrict" class="form-control">
+            </select>
         </div>
         <!---->
       ]]>
@@ -1885,13 +2748,14 @@
         <script type="text/javascript"><!--
         $('#collapse-payment-address select[name=\'zone_id\']').on('change', function() {
         	$.ajax({
-        		url: 'index.php?route=account/account/zone&zone_id=' + this.value,
+        		url: 'index.php?route=checkout/checkout/zone&zone_id=' + this.value,
         		dataType: 'json',
         		beforeSend: function() {
         			$('#collapse-payment-address select[name=\'zone_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
         		},
         		complete: function() {
         			$('.fa-spin').remove();
+              $('#collapse-payment-address select[name=\'district_id\']').trigger('change');
         		},
         		success: function(json) {
 
@@ -1913,6 +2777,8 @@
         			}
 
         			$('#collapse-payment-address select[name=\'district_id\']').html(html);
+              $('#collapse-payment-address select[name=\'subdistrict_id\']').html('<option value=""><?php echo $text_select; ?></option>');
+
         		},
         		error: function(xhr, ajaxOptions, thrownError) {
         			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
@@ -1920,6 +2786,42 @@
         	});
         });
         $('#collapse-payment-address select[name=\'zone_id\']').trigger('change');
+        /*---*/
+        $('#collapse-payment-address select[name=\'district_id\']').on('change', function() {
+          $.ajax({
+            url: 'index.php?route=checkout/checkout/district&district_id=' + this.value,
+            dataType: 'json',
+            beforeSend: function() {
+              $('#collapse-payment-address select[name=\'district_id\']').after(' <i class="fa fa-circle-o-notch fa-spin"></i>');
+            },
+            complete: function() {
+              $('.fa-spin').remove();
+            },
+            success: function(json) {
+              html = '<option value=""><?php echo $text_select; ?></option>';
+              if (json['subdistricts'] && json['subdistricts']['rajaongkir']['results'] != '') {
+                for (i = 0; i < json['subdistricts']['rajaongkir']['results'].length; i++) {
+                  html += '<option value="' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] + '"';
+                  if (json['subdistricts']['rajaongkir']['results'][i]['subdistrict_id'] == '<?php echo $subdistrict_id; ?>') {
+                    html += ' selected="selected"';
+                  }
+                  html += '>' + json['subdistricts']['rajaongkir']['results'][i]['subdistrict_name'] +  '</option>';
+                }
+              } else {
+                /*html += '<option value="0" selected="selected"><?php echo $text_none; ?></option>';*/
+              }
+
+              $('select[name=\'subdistrict_id\']').html(html);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+              alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+          });
+        });
+
+
+        /*---*/
+
         //--></script>
       ]]>
       </add>
