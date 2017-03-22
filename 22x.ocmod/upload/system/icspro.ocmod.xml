@@ -1,5 +1,5 @@
 <modification>
-  <name>Indonesian Couriers Service PRO</name>
+  <name>Ongkos Kirim PRO</name>
 	<version>1.0</version>
 	<link>http://eshopstrarter.com</link>
 	<author>opencartplugin</author>
@@ -1913,7 +1913,7 @@
       </add>
     </operation>
     <operation error="skip">
-      <search><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
+      <search index="1"><![CDATA[<?php foreach ($custom_fields as $custom_field) { ?>]]></search>
       <add position="before"><![CDATA[
         <!--frd 2-->
         <div class="form-group required">

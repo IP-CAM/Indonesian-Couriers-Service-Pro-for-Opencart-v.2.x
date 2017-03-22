@@ -1,11 +1,11 @@
 <?php
 // Heading
-$_['heading_title']    = 'Indonesian Couriers Service PRO';
+$_['heading_title']    = 'Ongkos Kirim PRO';
 
 // Text
 $_['text_shipping']    = 'Shipping';
-$_['text_success']     = 'Success: You have modified Indonesian Couriers Service PRO!';
-$_['text_edit']        = 'Edit Indonesian Couriers Service PRO';
+$_['text_success']     = 'Success: You have modified Ongkos Kirim PRO!';
+$_['text_edit']        = 'Edit Ongkos Kirim PRO';
 $_['text_extension']   = 'Extensions';
 // Entry
 $_['tab_igstikipro']       = 'TIKI';

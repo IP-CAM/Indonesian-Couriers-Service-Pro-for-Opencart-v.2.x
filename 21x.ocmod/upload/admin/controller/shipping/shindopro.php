@@ -270,6 +270,42 @@ class ControllerShippingShindopro extends Controller {
 			'text'  => 'Regular Service',
 			'value' => 'EZ'
 		);
+		//----
+		//tambahan
+		$data['igsjnepro_services'][] = array(
+			'text'  => 'JNE City Courier',
+			'value' => 'CTC'
+		);
+		$data['igsjnepro_services'][] = array(
+			'text'  => 'JNE City Courier',
+			'value' => 'CTCOKE'
+		);
+		$data['igsjnepro_services'][] = array(
+			'text'  => 'JNE City Courier',
+			'value' => 'CTCSPS'
+		);
+		$data['igsjnepro_services'][] = array(
+			'text'  => 'JNE City Courier',
+			'value' => 'CTCYES'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Express Sameday Barang',
+			'value' => 'Express Sameday Barang'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Express Sameday Dokumen',
+			'value' => 'Express Sameday Dokumen'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Express Next Day Dokumen',
+			'value' => 'Express Next Day Dokumen'
+		);
+		$data['igspospro_services'][] = array(
+			'text'  => 'Express Next Day Barang',
+			'value' => 'Express Next Day Barang'
+		);
+
+		//----
 
 
 		$data['token'] = $this->session->data['token'];
