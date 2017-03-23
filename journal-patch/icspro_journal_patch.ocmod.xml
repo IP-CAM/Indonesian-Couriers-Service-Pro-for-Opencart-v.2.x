@@ -1,0 +1,30 @@
+<modification>
+  <name>Ongkos Kirim PRO JOURNAL PATCH</name>
+	<version>1.0</version>
+	<link>http://eshopstrarter.com</link>
+	<author>opencartplugin</author>
+	<code>indonesian_couriers_service_free_JOURNAL_PATCH</code>
+  <file path="catalog/model/journal2/checkout.php">
+    <operation error="skip">
+      <search index="2"><![CDATA[foreach ($results as $result) {]]></search>
+      <add position="before"><![CDATA[
+        //frd 1
+        if ($this->config->get('shindopro_status')==true) {
+  				$results[] = array('code'=>'igspospro');
+  				$results[] = array('code'=>'igstikipro');
+  				$results[] = array('code'=>'igsjnepro');
+  				$results[] = array('code'=>'igswahanapro');
+  				$results[] = array('code'=>'igsjntpro');
+  			}
+  			foreach ($results as $key => $result) {
+  				if ($result['code']=='shindopro') {
+  					unset ($results[$key]);
+  				}
+  			}
+  			//----
+
+        ]]>
+      </add>
+    </operation>
+  </file>
+</modification>
